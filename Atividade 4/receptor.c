@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #define LEN_BIN 50000
-#define CARAC 9000
-#define WORDS 25
+#define CARAC 30000
+#define WORDS 30
 
 int binTodec(int *bin){
 	int potenc = 1, i, decimal = 0;
@@ -49,7 +49,7 @@ void binTohexa(int *prot, char *protocol){
 		else if(prot[(i*4)] == 1 && prot[(i*4)+1] == 1 && prot[(i*4)+2] == 0 && prot[(i*4)+3] == 1)
 	    		protocol[i] = 'D';
 		else if(prot[(i*4)] == 1 && prot[(i*4)+1] == 1 && prot[(i*4)+2] == 1 && prot[(i*4)+3] == 0)
-	    		protocol[i] = 'D';
+	    		protocol[i] = 'E';
 		else if(prot[(i*4)] == 1 && prot[(i*4)+1] == 1 && prot[(i*4)+2] == 1 && prot[(i*4)+3] == 1)
 	    		protocol[i] = 'F';
 	}
@@ -139,31 +139,50 @@ int check(int entrada[CARAC][8], int *ccks, int *prot, int campos, int semEscape
 		return 0;
 }
 
+int equal(int *vec1, int *vec2){
+	int aux=0, j=0;
+	
+	while(j<8){
+		if(vec1[j] != vec2[j])
+			aux = 1;
+		j++;
+	}
+	if(aux == 0)
+		return 1;
+	else 
+		return 0;
+}
+
 void charToworld(int entrada[CARAC][8], int campo, int semEscape[CARAC][8], int *index_semEscape){
 	int escape[8] = {0,1,1,1,1,1,0,1};
-	int i, j=0, aux=0;
+	int i, j=0;
 	
 	for(i=4; i<campo-2; i++){
-		while(j<8){
-			if(entrada[i][j] != escape[j])
-				aux = 1;
-			j++;
-		}
-		if(aux == 1){
+		if(equal(entrada[i], escape) == 0){
 			j=0;
 			while(j<8){
 				semEscape[*index_semEscape][j] = entrada[i][j];
 				j++;
 			}
+			(*index_semEscape)++;
+		}else{
+			if(equal(entrada[i-1], escape) == 1){
+				j=0;
+				while(j<8){
+					semEscape[*index_semEscape][j] = entrada[i][j];
+					j++;
+				}
+				(*index_semEscape)++;
+			}
 		}
-		(*index_semEscape)++;
+		
 	}	
 }
 
 void receptor(int entrada[CARAC][8], int campos, int index_out, int words){
 	
 	char protocol[4], checksum[4];
-	int i, verify, index_semEscape=0, adress, control, ccks[16], prot[16], payload[100], semEscape[CARAC][8];
+	int i, verify, index_semEscape=0, adress, control, ccks[16], prot[16], payload[CARAC], semEscape[CARAC][8];
 
 	adress = binTodec(entrada[0]);
 	
@@ -224,21 +243,7 @@ void receptor(int entrada[CARAC][8], int campos, int index_out, int words){
 	
 }
 
-int equal(int *vec1, int *vec2){
-	int aux=0, j=0;
-	
-	while(j<8){
-		if(vec1[j] != vec2[j])
-			aux = 1;
-		j++;
-	}
-	if(aux == 0)
-		return 1;
-	else 
-		return 0;
-}
-
-void preProcessing(int input_with_preproc[WORDS][CARAC][8], int *words, int input[CARAC][8], int bytes, int *campos){
+void preProcessing(int input_with_preproc[WORDS][6251][8], int *words, int input[CARAC][8], int bytes, int *campos){
 	int flag[8] = {0,1,1,1,1,1,1,0};
 	int escape[8] = {0,1,1,1,1,1,0,1};
 	int entrou, j, i;
@@ -265,7 +270,7 @@ void preProcessing(int input_with_preproc[WORDS][CARAC][8], int *words, int inpu
 	
 }
 int main(){
-	int i, j, n, bytes, input[CARAC][8], input_with_preproc[WORDS][CARAC][8], words=-1, campos[100];
+	int i, j, n, bytes, input[CARAC][8], input_with_preproc[WORDS][6251][8], words=-1, campos[100];
 	char s[LEN_BIN];
 	
 	scanf("%s", s);
