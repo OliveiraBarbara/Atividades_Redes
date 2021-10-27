@@ -95,19 +95,23 @@ void hexaTobin(char *hexa, int *protocol){
 
 void charTobinary(char *str, int n, int bin[MAX][8]){
 	int i, j, valor;
-	
+
 	for(i = 0; i<n; i++){
-		j=7;
 		valor = str[i];
-		while(valor != 0){
-			bin[i][j] = valor % 2;
-			j--;
-			valor = valor/2;
-		}
-		if(j != -1){
-			while(j>=0){
-				bin[i][j] = 0;
+		if(valor != -61){
+			if(valor < 0)
+				valor = valor + 255;
+			j=7;
+			while(valor != 0){
+				bin[i][j] = valor % 2;
 				j--;
+				valor = valor/2;
+			}
+			if(j != -1){
+				while(j>=0){
+					bin[i][j] = 0;
+					j--;
+				}
 			}
 		}
 	}
@@ -240,7 +244,9 @@ int main(){
 	scanf("%s ", p);
 		
 	scanf("%[^\n]s", m);
+
 	n = strlen(m);
+	
 	n_aux = n;
 	if(n%2 != 0){
 		n_aux++;
