@@ -14,6 +14,18 @@ int binary(int valor_real){
 	return bin;
 }
 
+int bin_int(int bin){
+	int potenc = 1, total = 0;
+	
+	while(bin > 0) {
+	   total += bin % 10 * potenc;
+	   bin /= 10;
+	   potenc *= 2;
+	}
+
+	return total;	
+}
+
 int mascara(int maxHost){
 	int pot2 = 1, i = 0;
 	
@@ -26,23 +38,129 @@ int mascara(int maxHost){
 	return i;
 }
 
-int main(void){
-	int cp1, cp2, cp3, cp4, qtdHost;
-	int bcp1, bcp2, bcp3, bcp4, masc;
+void subRede(int aux, int *mascBin, int *mascDec){
+	int i, j, num, cont=1, pot;
 	
-	scanf("%d.%d.%d.%d %d", &cp1, &cp2, &cp3, &cp4, &qtdHost);
-	bcp1 = binary(cp1);
-	bcp2 = binary(cp2);
-	bcp3 = binary(cp3);
-	bcp4 = binary(cp4);
+	for(i=0; i<4; i++) {
+		num = 0;
+		pot = 10000000;
+		for (j=0; j<8; j++) {
+			if(aux >= cont){
+				num = num + pot;
+				cont++;
+			}else
+				num = num + 0;
+			pot = pot / 10;
+		}
+		mascBin[i] = num;		
+	}
 	
-	masc = mascara(qtdHost);
-	printf("%d\n", masc);
-	
-	printf("Endereço informado: %d.%d.%d.%d (%08d %08d %08d %08d)\n", cp1, cp2, cp3, cp4, bcp1, bcp2, bcp3, bcp4);
-	printf("Máscara da sub-rede: 255.255.255.0 (11111111 11111111 11111111 00000000)\n");
-	printf("Endereço da sub-rede: 192.168.0.0 (11000000 10101000 00000000 00000000)\n");
-	printf("End. broadcast da sub-rede: 192.168.0.255 (11000000 10101000 00000000 11111111)\n");
-	return(0);
+	for(j=0; j<4; j++)
+		mascDec[j] = bin_int(mascBin[j]);
+}
 
+void endSubRede(int *ipBin, int *mascBin, int *endBin, int *endDec){
+	int i, j, auxIP, auxI, auxM, auxMasc, num, pot;
+	
+	for(i=0; i<4; i++) {
+		num = 0;
+		pot = 10000000;
+		auxIP = ipBin[i];
+		auxMasc = mascBin[i];
+		for (j=0; j<8; j++){
+			auxI = auxIP / pot;
+			auxM = auxMasc / pot;
+			if(auxI == 1 && auxM == 1)
+				num = num + pot;
+			else
+				num = num + 0;
+			auxIP = auxIP % pot;
+			auxMasc = auxMasc % pot;
+			pot /= 10;
+		}
+		endBin[i] = num;		
+	}
+	
+	for(j=0; j<4; j++)
+		endDec[j] = bin_int(endBin[j]);
+}
+
+void broadcast(int *ipBin, int *mascBin, int *broadBin, int *broadDec){
+	int i, j, auxIP, auxI, auxM, auxMasc, num, pot;
+	
+	for(i=0; i<4; i++) {
+		num = 0;
+		pot = 10000000;
+		auxIP = ipBin[i];
+		auxMasc = mascBin[i];
+		for (j=0; j<8; j++){
+			auxI = auxIP / pot;
+			auxM = auxMasc / pot;
+			if(auxI == 1 || auxM == 0)
+				num = num + pot;
+			else
+				num = num + 0;
+			auxIP = auxIP % pot;
+			auxMasc = auxMasc % pot;
+			pot /= 10;
+		}
+		broadBin[i] = num;		
+	}
+	
+	for(j=0; j<4; j++)
+		broadDec[j] = bin_int(broadBin[j]);
+}
+
+void imprime(int *vec1, int *vec2){
+	int i;
+	
+	for(i=0; i<4; i++){
+		printf("%d", vec1[i]);
+		if(i<4-1)
+			printf(".");
+	}
+	
+	printf(" (");
+	for(i=0; i<4; i++){
+		printf("%08d", vec2[i]);
+		if(i<4-1)
+			printf(" ");
+	}
+	printf(")\n");
+}
+
+int main(void){
+	char ip[36], *ipDiv;
+	int i, ipDec[4], qtdHost, auxMasc, ipBin[4], mascBin[4], mascDec[4], endBin[4], endDec[4], broadBin[4], broadDec[4]; 
+	
+	scanf("%s %d", ip, &qtdHost);
+	
+	ipDiv = strtok(ip, ".");
+	for(i = 0; i < 4; i++){
+		ipDec[i] = atoi(ipDiv);
+		ipDiv = strtok(NULL, ".");
+	}
+	
+	for(i = 0; i<4; i++)
+		ipBin[i] = binary(ipDec[i]);
+		
+	auxMasc = mascara(qtdHost);
+	auxMasc = 32 - auxMasc;
+	
+	subRede(auxMasc, mascBin, mascDec);
+	
+	endSubRede(ipBin, mascBin, endBin, endDec);
+	
+	broadcast(ipBin, mascBin, broadBin, broadDec);
+	
+	printf("Endereço informado: ");
+	imprime(ipDec, ipBin);
+	printf("Máscara da sub-rede: ");
+	imprime(mascDec, mascBin);
+	printf("Endereço da sub-rede: ");
+	imprime(endDec, endBin);
+	printf("End. broadcast da sub-rede: ");
+	imprime(broadDec, broadBin);
+	
+	return(0);
 }
